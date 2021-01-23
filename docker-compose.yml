@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+  bluetooth-agent-bot:
+    image: 'ghcr.io/vovcharaa/bluetooth-agent-bot:latest'
+    container_name: 'bluetooth-agent-bot'
+    restart: unless-stopped
+    env_file:
+     - bot.env

@@ -1,0 +1,13 @@
+.vscode
+venv
+.git
+**/__pycache__/**
+config/
+.env
+.mypy_cache
+.chglog
+.github
+demo/
+bot.env
+setup.config
+docker-compose.yml
