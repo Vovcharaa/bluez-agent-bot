@@ -1,8 +1,4 @@
 import logging
-import sys
-import dbus
-import dbus.service
-import dbus.mainloop.glib
 
 import telegram
 from telegram.ext import (
@@ -40,16 +36,12 @@ def started_menu_inline(update: telegram.Update, context: CallbackContext):
     )
 
 
-
-
 @utils.whitelist
 def error_handler(update: telegram.Update, context: CallbackContext):
     text = "Something went wrong"
     if update.callback_query:
         query = update.callback_query
-        query.edit_message_text(
-            text=text, parse_mode="MarkdownV2"
-        )
+        query.edit_message_text(text=text, parse_mode="MarkdownV2")
     else:
         update.message.reply_text(text)
 
@@ -66,13 +58,7 @@ def run():
         CallbackQueryHandler(started_menu_inline, pattern="addmenu\\_*")
     )
     updater.bot.set_my_commands(
-        [
-            ("start", "Open menu with commands"),
-            ("menu", "Open menu with commands"),
-            ("torrents", "List all torrents"),
-            ("memory", "Available memory"),
-            ("add", "Add torrent"),
-        ]
+        [("start", "Open menu with commands"), ("menu", "Open menu with commands")]
     )
     user = updater.bot.get_me()
     logger.info(f"Started bot {user['first_name']} at https://t.me/{user['username']}")
