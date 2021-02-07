@@ -1,14 +1,9 @@
 import logging
 
 import telegram
-from telegram.ext import (
-    CallbackContext,
-    CallbackQueryHandler,
-    CommandHandler,
-    Updater,
-)
+from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler, Updater
 
-from . import config, menus, utils, redis_client
+from . import config, menus, redis_client, utils
 from .agent import Agent
 from .notify import Notify
 

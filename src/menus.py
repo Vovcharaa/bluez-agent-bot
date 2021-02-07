@@ -65,3 +65,8 @@ def answered() -> str:
 def successful() -> str:
     text = "Successful!"
     return text
+
+
+def rejected() -> str:
+    text = "Rejected!"
+    return text

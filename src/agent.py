@@ -1,7 +1,9 @@
+import logging
 import threading
+
 import dbus
-import dbus.service
 import dbus.mainloop.glib
+import dbus.service
 from gi.repository import GLib
 
 from .notify import Notify
@@ -46,6 +48,8 @@ class Agent(dbus.service.Object):
         self._blocking_io = blocking_io
         self._mainloop = None
         self._capability = capability
+        self._logger = logging.getLogger(__name__)
+        self._logger.setLevel(logging.INFO)
         super().__init__(self._bus, path)
 
     def start(self):
@@ -54,7 +58,7 @@ class Agent(dbus.service.Object):
             self._bus.get_object("org.bluez", "/org/bluez"), "org.bluez.AgentManager1"
         )
         manager.RegisterAgent(self._path, self._capability)
-        print("Agent registered")
+        self._logger.info("Agent registered")
         manager.RequestDefaultAgent(self._path)
         manager_thread = threading.Thread(target=self._mainloop.run)
         manager_thread.start()
@@ -66,7 +70,7 @@ class Agent(dbus.service.Object):
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
     def Release(self):
-        print("Release")
+        self._logger.info("Release")
         if self.exit_on_release:
             self._mainloop.quit()
 
@@ -97,12 +101,14 @@ class Agent(dbus.service.Object):
     @dbus.service.method(AGENT_INTERFACE, in_signature="ouq", out_signature="")
     def DisplayPasskey(self, device, passkey, entered):
         device = Device(self._bus, device)
-        print(f"DisplayPasskey ({device.alias}, {passkey} entered {entered})")
+        self._logger.info(
+            f"DisplayPasskey ({device.alias}, {passkey} entered {entered})"
+        )
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="os", out_signature="")
     def DisplayPinCode(self, device, pincode):
         device = Device(self._bus, device)
-        print(f"DisplayPinCode {device.alias} {pincode}")
+        self._logger.info(f"DisplayPinCode {device.alias} {pincode}")
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, pin):
@@ -110,7 +116,9 @@ class Agent(dbus.service.Object):
         confirm = self._blocking_io.confirm_message(device.alias)
         if confirm:
             device.trusted = True
+            self._blocking_io.accepted()
             return
+        self._blocking_io.rejected()
         raise Rejected("Passkey doesn't match")
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="o", out_signature="")
@@ -124,4 +132,4 @@ class Agent(dbus.service.Object):
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
     def Cancel(self):
-        print("Cancel")
+        self._logger.info("Cancel")

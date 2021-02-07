@@ -1,4 +1,5 @@
 import telegram
+
 from . import menus, redis_client
 
 
@@ -12,7 +13,12 @@ class Notify:
         self._bot.send_message(chat_id=user, text=text, reply_markup=reply_markup)
         return redis_client.get_answer(user)
 
-    def successful_message(self):
+    def accepted(self):
         text = menus.successful()
+        user = redis_client.get_current_user()
+        self._bot.send_message(chat_id=user, text=text)
+
+    def rejected(self):
+        text = menus.rejected()
         user = redis_client.get_current_user()
         self._bot.send_message(chat_id=user, text=text)
