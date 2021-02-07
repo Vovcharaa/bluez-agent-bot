@@ -1,4 +1,5 @@
 import threading
+import telegram
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -33,9 +34,10 @@ class Rejected(dbus.DBusException):
 
 
 class Agent(dbus.service.Object):
-    def __init__(self, path: str = "/bot/agent", capability: str = "DisplayOnly"):
+    def __init__(self, bot, path: str = "/bot/agent", capability: str = "DisplayOnly"):
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self._bus = dbus.SystemBus()
+        self._bot: telegram.Bot = bot
         self._path = path
         self._mainloop = None
         self._capability = capability
