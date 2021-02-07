@@ -1,9 +1,10 @@
 import threading
-import telegram
 import dbus
 import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GLib
+
+from .notify import Notify
 
 AGENT_INTERFACE = "org.bluez.Agent1"
 DEVICE_INTERFACE = "org.bluez.Device1"
@@ -11,9 +12,8 @@ DEVICE_INTERFACE = "org.bluez.Device1"
 
 class Device:
     def __init__(self, bus, device):
-        self._bus = bus
         self._device = dbus.Interface(
-            self._bus.get_object("org.bluez", device), "org.freedesktop.DBus.Properties"
+            bus.get_object("org.bluez", device), "org.freedesktop.DBus.Properties"
         )
 
     @property
@@ -34,11 +34,16 @@ class Rejected(dbus.DBusException):
 
 
 class Agent(dbus.service.Object):
-    def __init__(self, bot, path: str = "/bot/agent", capability: str = "DisplayOnly"):
+    def __init__(
+        self,
+        blocking_io: Notify,
+        path: str = "/bot/agent",
+        capability: str = "DisplayOnly",
+    ):
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self._bus = dbus.SystemBus()
-        self._bot: telegram.Bot = bot
         self._path = path
+        self._blocking_io = blocking_io
         self._mainloop = None
         self._capability = capability
         super().__init__(self._bus, path)
@@ -102,9 +107,8 @@ class Agent(dbus.service.Object):
     @dbus.service.method(AGENT_INTERFACE, in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, pin):
         device = Device(self._bus, device)
-        print(f"RequestConfirmation from {device.alias}\nPin {pin}")
-        confirm = input("Confirm passkey (yes/no): ")
-        if confirm == "yes":
+        confirm = self._blocking_io.confirm_message(device.alias)
+        if confirm:
             device.trusted = True
             return
         raise Rejected("Passkey doesn't match")
@@ -121,8 +125,3 @@ class Agent(dbus.service.Object):
     @dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
     def Cancel(self):
         print("Cancel")
-
-
-if __name__ == "__main__":
-    agent = Agent()
-    agent.start()

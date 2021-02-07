@@ -15,5 +15,14 @@ if UPDATER_TYPE not in allowed_updaters:
         f"No such updater.\n Available options: {', '.join(allowed_updaters)}"
     )
 
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+
 _whitelist = os.environ["WHITELIST"]
 WHITELIST = [int(i.strip()) for i in _whitelist.split(",")]
+
+CURRENT_USER_KEY = "CURRENT_USER_KEY"
+
+ADMIN = int(os.environ["ADMIN"])
