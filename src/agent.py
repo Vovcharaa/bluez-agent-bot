@@ -13,7 +13,7 @@ DEVICE_INTERFACE = "org.bluez.Device1"
 
 
 class Device:
-    def __init__(self, bus, device):
+    def __init__(self, bus: dbus.SystemBus, device):
         self._device = dbus.Interface(
             bus.get_object("org.bluez", device), "org.freedesktop.DBus.Properties"
         )
@@ -65,6 +65,11 @@ class Agent(dbus.service.Object):
 
     exit_on_release = True
 
+    @property
+    def set_exit_on_release(self):
+        return self.exit_on_release
+
+    @set_exit_on_release.setter
     def set_exit_on_release(self, exit_on_release):
         self.exit_on_release = exit_on_release
 
@@ -116,9 +121,9 @@ class Agent(dbus.service.Object):
         confirm = self._blocking_io.confirm_message(device.alias)
         if confirm:
             device.trusted = True
-            self._blocking_io.accepted()
+            self._blocking_io.accepted(device.alias)
             return
-        self._blocking_io.rejected()
+        self._blocking_io.rejected(device.alias)
         raise Rejected("Passkey doesn't match")
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="o", out_signature="")

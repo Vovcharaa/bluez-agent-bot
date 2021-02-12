@@ -23,6 +23,8 @@ REDIS_DB = int(os.getenv("REDIS_DB", 0))
 _whitelist = os.environ["WHITELIST"]
 WHITELIST = [int(i.strip()) for i in _whitelist.split(",")]
 
+TIMEOUT = int(os.getenv("TIMEOUT", 60))
+
 CURRENT_USER_KEY = "CURRENT_USER_KEY"
 
-ADMIN = int(os.environ["ADMIN"])
+ADMIN = os.environ["ADMIN"]

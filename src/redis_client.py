@@ -9,25 +9,37 @@ client.config_set("notify-keyspace-events", "KEA")
 sub = client.pubsub()
 
 
-def get_answer(chat_id: int) -> bool:
-    sub.subscribe(f"__keyspace@{config.REDIS_DB}__:response:{chat_id}")
+def get_answer(chat_id: str) -> bool:
+    client.set(f"response:{chat_id}:timeout", config.TIMEOUT, config.TIMEOUT)
+    sub.psubscribe(f"__keyspace@{config.REDIS_DB}__:response:{chat_id}*")
     for event in sub.listen():
         if event["data"] == b"set":
+            sub.punsubscribe(f"__keyspace@{config.REDIS_DB}__:response:{chat_id}*")
             answer = client.get(f"response:{chat_id}")
-            if answer:
-                return bool(answer)
+            client.delete(f"response:{chat_id}", f"response:{chat_id}:timeout")
+            if answer == b'1':
+                return True
             else:
                 return False
+        elif event["data"] == b"expired":
+            sub.punsubscribe(f"__keyspace@{config.REDIS_DB}__:response:{chat_id}*")
+            client.delete(f"response:{chat_id}", f"response:{chat_id}:timeout")
+            raise TimeoutError
+    sub.punsubscribe(f"__keyspace@{config.REDIS_DB}__:response:{chat_id}*")
     return False
 
 
-def set_answer(chat_id: int, answer: bool):
+def set_answer(chat_id: str, answer: bool):
     return client.set(f"response:{chat_id}", int(answer))
 
 
-def get_current_user() -> int:
+def get_current_user() -> str:
     user = client.get(config.CURRENT_USER_KEY)
     if user:
-        return int(user)
+        return str(user)
     else:
         return config.ADMIN
+
+
+def set_current_user(chat_id: int):
+    return client.set(config.CURRENT_USER_KEY, chat_id)

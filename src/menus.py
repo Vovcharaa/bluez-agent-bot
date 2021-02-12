@@ -62,11 +62,16 @@ def answered() -> str:
     return text
 
 
-def successful() -> str:
-    text = "Successful!"
+def successful(device) -> str:
+    text = f"{device} connected successfully!"
     return text
 
 
-def rejected() -> str:
-    text = "Rejected!"
+def rejected(device) -> str:
+    text = f"{device} rejected!"
+    return text
+
+
+def timeout() -> str:
+    text = "Timeout"
     return text
