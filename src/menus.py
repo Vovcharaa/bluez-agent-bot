@@ -2,14 +2,53 @@ from typing import Tuple
 
 import telegram
 
-# from telegram.utils.helpers import escape_markdown
+from .bus import adapter
+from .redis_client import set_current_user, delete_current_user
 
 
 def menu() -> str:
     text = (
         "List of available commands:\n"
-        "/bluetooth {off, on} - enable or disable bluetooth\n"
-        "/discoverable - Toggle discoverable\n"
+        "/bluetooth [off] - Enable or Disable bluetooth\n"
+        "/discoverable [off] - Toggle discoverable\n"
+        "/status - Get status of interface"
+    )
+    return text
+
+
+def bluetooth_on() -> str:
+    adapter.powered = True
+    text = "Bluetooth enabled"
+    return text
+
+
+def bluetooth_off() -> str:
+    adapter.powered = False
+    text = "Bluetooth disabled"
+    return text
+
+
+def discoverable_on(chat_id: int) -> str:
+    set_current_user(chat_id)
+    adapter.discoverable = True
+    text = "Discoverable enabled"
+    return text
+
+
+def discoverable_off() -> str:
+    adapter.discoverable = False
+    delete_current_user()
+    text = "Discoverable disabled"
+    return text
+
+
+def get_status() -> str:
+    text = (
+        "Device status:\n"
+        f"Name: {adapter.alias}\n"
+        f"Powered: {bool(adapter.powered)}\n"
+        f"Discoverable: {bool(adapter.discoverable)}\n"
+        f"Discoverable timeout: {adapter.discoverable_timeout} sec"
     )
     return text
 
@@ -38,31 +77,14 @@ def start() -> str:
     return text
 
 
-def enable_bluetooth() -> Tuple[str, telegram.InlineKeyboardMarkup]:
-    text = "Do you want to enable bluetooth?"
-    reply_markup = telegram.InlineKeyboardMarkup(
-        [
-            [
-                telegram.InlineKeyboardButton(
-                    "✅Yes",
-                    callback_data="bluetooth_yes",
-                ),
-                telegram.InlineKeyboardButton(
-                    "❌No",
-                    callback_data="bluetooth_no",
-                ),
-            ]
-        ]
-    )
-    return text, reply_markup
-
-
 def answered() -> str:
     text = "Processing"
     return text
 
 
 def successful(device) -> str:
+    adapter.discoverable = False
+    delete_current_user()
     text = f"{device} connected successfully!"
     return text
 

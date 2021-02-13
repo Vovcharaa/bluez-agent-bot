@@ -2,7 +2,6 @@ import logging
 import threading
 
 import dbus
-import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib
 
@@ -38,21 +37,21 @@ class Rejected(dbus.DBusException):
 class Agent(dbus.service.Object):
     def __init__(
         self,
-        blocking_io: Notify,
+        bus: dbus.SystemBus,
         path: str = "/bot/agent",
         capability: str = "DisplayOnly",
     ):
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        self._bus = dbus.SystemBus()
+        self._bus = bus
         self._path = path
-        self._blocking_io = blocking_io
+        self._blocking_io = None
         self._mainloop = None
         self._capability = capability
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(logging.INFO)
         super().__init__(self._bus, path)
 
-    def start(self):
+    def start(self, blocking_io: Notify):
+        self._blocking_io = blocking_io
         self._mainloop = GLib.MainLoop()
         manager = dbus.Interface(
             self._bus.get_object("org.bluez", "/org/bluez"), "org.bluez.AgentManager1"
@@ -62,6 +61,9 @@ class Agent(dbus.service.Object):
         manager.RequestDefaultAgent(self._path)
         manager_thread = threading.Thread(target=self._mainloop.run)
         manager_thread.start()
+
+    def stop(self):
+        self._mainloop.quit()
 
     exit_on_release = True
 

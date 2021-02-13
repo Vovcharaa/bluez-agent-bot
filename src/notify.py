@@ -8,8 +8,8 @@ class Notify:
         self._bot: telegram.Bot = bot
 
     def confirm_message(self, device_name: str) -> bool:
-        text, reply_markup = menus.approve(device_name)
         user = redis_client.get_current_user()
+        text, reply_markup = menus.approve(device_name)
         message = self._bot.send_message(
             chat_id=user, text=text, reply_markup=reply_markup
         )
@@ -21,11 +21,11 @@ class Notify:
             return False
 
     def accepted(self, device_name: str):
-        text = menus.successful(device_name)
         user = redis_client.get_current_user()
+        text = menus.successful(device_name)
         self._bot.send_message(chat_id=user, text=text)
 
     def rejected(self, device_name: str):
-        text = menus.rejected(device_name)
         user = redis_client.get_current_user()
+        text = menus.rejected(device_name)
         self._bot.send_message(chat_id=user, text=text)
