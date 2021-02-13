@@ -3,6 +3,9 @@ services:
   bluetooth-agent-bot:
     image: 'ghcr.io/vovcharaa/bluetooth-agent-bot:latest'
     container_name: 'bluetooth-agent-bot'
+    privileged: true
     restart: unless-stopped
     env_file:
      - bot.env
+    volumes:
+      - '/var/run/dbus:/var/run/dbus'
